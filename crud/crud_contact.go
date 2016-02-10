@@ -82,7 +82,7 @@ func (c ContactResource) Create(obj interface{}, req api2go.Request) (api2go.Res
 
 	contact.ID = res.GeneratedKeys[0]
 
-	resp.Res = obj
+	resp.Res = contact
 	resp.Code = http.StatusCreated
 	resp.Meta = map[string]interface{}{}
 
