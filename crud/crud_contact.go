@@ -17,11 +17,15 @@ type ContactResource struct {
 	Session *r.Session
 }
 
+func NewContactResource() ContactResource {
+	return ContactResource{Session: session}
+}
+
 func (c ContactResource) FindAll(req api2go.Request) (api2go.Responder, error) {
 	var resp api2go.Response
 
 	var contacts []models.Contact
-	res, err := r.Table("contacts").Get().Run(c.Session)
+	res, err := r.Table("contacts").Run(c.Session)
 	if err != nil {
 		return resp, api2go.NewHTTPError(err, "Could not find contacts", http.StatusInternalServerError)
 	}

@@ -26,7 +26,7 @@ var (
 	session *r.Session
 
 	resources = []resource{
-		resource{Object: models.Contact{}, CRUD: crud.ContactResource{Session: session}},
+		resource{Object: models.Contact{}, CRUD: crud.NewContactResource()},
 	}
 )
 
