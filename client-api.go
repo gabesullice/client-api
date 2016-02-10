@@ -58,5 +58,6 @@ func main() {
 
 	handler := api.Handler()
 
+	log.Printf("Awaiting connections on %s...", ":3000")
 	http.ListenAndServe(":3000", handler)
 }
