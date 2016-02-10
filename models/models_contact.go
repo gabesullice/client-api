@@ -1,18 +1,18 @@
 package models
 
 type Phone struct {
-	Type      string `json:"type"`
-	Number    string `json:"number"`
-	Extension string `json:"extension,omitempty"`
+	Type      string `gorethink:"type" json:"type"`
+	Number    string `gorethink:"number" json:"number"`
+	Extension string `gorethink:"extension" json:"extension,omitempty"`
 }
 
 type Contact struct {
-	ID        string   `json:"-"`
-	FirstName string   `json:"firstName"`
-	LastName  string   `json:"lastName"`
-	Position  string   `json:"position"`
-	Phones    []Phone  `json:"phones"`
-	Emails    []string `json:"emails"`
+	ID        string   `gorethink:"id,omitempty" json:"-"`
+	FirstName string   `gorethink:"firstName" json:"firstName"`
+	LastName  string   `gorethink:"lastName" json:"lastName"`
+	Position  string   `gorethink:"position" json:"position"`
+	Phones    []Phone  `gorethink:"phones" json:"phones"`
+	Emails    []string `gorethink:"emails" json:"emails"`
 }
 
 func (c Contact) GetName() string {
