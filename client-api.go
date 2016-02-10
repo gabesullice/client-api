@@ -3,16 +3,16 @@ package main
 import (
 	// stdlib
 	//	"fmt"
-	//	"log"
+	"log"
 	"net/http"
 
 	// internal
 	"github.com/gabesullice/client-api/crud"
 	"github.com/gabesullice/client-api/models"
-	"github.com/gabesullice/client-api/storage"
 
 	// external
 	//"github.com/julienschmidt/httprouter"
+	r "github.com/dancannon/gorethink"
 	"github.com/manyminds/api2go"
 	"github.com/manyminds/api2go/jsonapi"
 )
@@ -23,14 +23,30 @@ var (
 		"prefix": "v0",
 	}
 
+	session *r.Session
+
 	resources = []resource{
-		resource{Object: models.Contact{}, CRUD: crud.ContactResource{storage.NewDefaultStorage()}},
+		resource{Object: models.Contact{}, CRUD: crud.ContactResource{Session: session}},
 	}
 )
 
 type resource struct {
 	Object jsonapi.MarshalIdentifier
 	CRUD   api2go.CRUD
+}
+
+func init() {
+	sess, err := r.Connect(r.ConnectOpts{
+		Address:  "localhost:28015",
+		Database: "client-api",
+		MaxIdle:  10,
+		MaxOpen:  10,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	session = sess
 }
 
 func main() {

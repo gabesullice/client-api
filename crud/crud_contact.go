@@ -2,27 +2,33 @@ package crud
 
 import (
 	// stdlib
+	"fmt"
 	"net/http"
 
 	// internal
 	"github.com/gabesullice/client-api/models"
-	"github.com/gabesullice/client-api/storage"
 
 	// external
+	r "github.com/dancannon/gorethink"
 	"github.com/manyminds/api2go"
 )
 
 type ContactResource struct {
-	ContactStorage storage.StorageInterface
+	Session *r.Session
 }
 
 func (c ContactResource) FindAll(req api2go.Request) (api2go.Responder, error) {
 	var resp api2go.Response
 
 	var contacts []models.Contact
-	err := c.ContactStorage.FindAll("contacts", contacts)
+	res, err := r.Table("contacts").Get().Run(c.Session)
 	if err != nil {
-		return resp, err
+		return resp, api2go.NewHTTPError(err, "Could not find contacts", http.StatusInternalServerError)
+	}
+	defer res.Close()
+
+	if err := res.All(&contacts); err != nil {
+		return resp, api2go.NewHTTPError(err, "Could not read contacts", http.StatusInternalServerError)
 	}
 
 	resp.Res = contacts
@@ -35,9 +41,19 @@ func (c ContactResource) FindAll(req api2go.Request) (api2go.Responder, error) {
 func (c ContactResource) FindOne(ID string, req api2go.Request) (api2go.Responder, error) {
 	var resp api2go.Response
 
-	contact, err := c.ContactStorage.FindOne("contacts", ID)
+	res, err := r.Table("contacts").Get(ID).Run(c.Session)
 	if err != nil {
-		return resp, err
+		return resp, api2go.NewHTTPError(err, "Could not find contact", http.StatusInternalServerError)
+	}
+	defer res.Close()
+
+	if res.IsNil() {
+		return resp, api2go.NewHTTPError(fmt.Errorf("Requested resource, %s, does not exist.", ID), "Resource not found.", http.StatusNotFound)
+	}
+
+	var contact models.Contact
+	if err := res.One(&contact); err != nil {
+		return resp, api2go.NewHTTPError(err, "Could not read contact", http.StatusInternalServerError)
 	}
 
 	resp.Res = contact
@@ -47,14 +63,20 @@ func (c ContactResource) FindOne(ID string, req api2go.Request) (api2go.Responde
 	return resp, nil
 }
 
-func (c ContactResource) Create(contact interface{}, req api2go.Request) (api2go.Responder, error) {
+func (c ContactResource) Create(obj interface{}, req api2go.Request) (api2go.Responder, error) {
 	var resp api2go.Response
 
-	obj := contact.(models.Contact)
-	obj, err := c.ContactStorage.Create(obj)
-	if err != nil {
-		return resp, err
+	contact, ok := obj.(models.Contact)
+	if !ok {
+		return resp, api2go.NewHTTPError(fmt.Errorf("Invalid instance given."), "Invalid instance given", http.StatusBadRequest)
 	}
+
+	res, err := r.Table("contacts").Insert(contact).RunWrite(c.Session)
+	if err != nil {
+		return resp, api2go.NewHTTPError(err, "Unable to save new resource", http.StatusInternalServerError)
+	}
+
+	contact.ID = res.GeneratedKeys[0]
 
 	resp.Res = obj
 	resp.Code = http.StatusCreated
@@ -63,33 +85,47 @@ func (c ContactResource) Create(contact interface{}, req api2go.Request) (api2go
 	return resp, nil
 }
 
-func (c ContactResource) Delete(id string, req api2go.Request) (api2go.Responder, error) {
+func (c ContactResource) Update(obj interface{}, req api2go.Request) (api2go.Responder, error) {
 	var resp api2go.Response
 
-	if err := c.ContactStorage.Delete("contacts", id); err != nil {
-		return resp, err
+	contact, ok := obj.(models.Contact)
+	if !ok {
+		return resp, api2go.NewHTTPError(fmt.Errorf("Invalid instance given."), "Invalid instance given", http.StatusBadRequest)
 	}
 
-	resp.Res = id
+	res, err := r.Table("contacts").Update(contact).RunWrite(c.Session)
+	if err != nil {
+		return resp, api2go.NewHTTPError(err, "Unable to update resource", http.StatusInternalServerError)
+	}
+
+	resp.Res = contact
 	resp.Code = http.StatusNoContent
-	resp.Meta = map[string]interface{}{}
+	resp.Meta = map[string]interface{}{
+		"replaced": res.Replaced,
+		"updated":  res.Updated,
+	}
 
 	return resp, nil
 }
 
-func (c ContactResource) Update(contact interface{}, req api2go.Request) (api2go.Responder, error) {
+func (c ContactResource) Delete(ID string, req api2go.Request) (api2go.Responder, error) {
 	var resp api2go.Response
 
-	err := c.ContactStorage.Update(contact.(models.Contact))
+	res, err := r.Table("contacts").Get(ID).Run(c.Session)
 	if err != nil {
-		return resp, err
+		return resp, api2go.NewHTTPError(err, "Could not find contact", http.StatusInternalServerError)
+	}
+	defer res.Close()
+
+	if res.IsNil() {
+		return resp, api2go.NewHTTPError(fmt.Errorf("Requested resource, %s, does not exist.", ID), "Resource not found.", http.StatusNotFound)
 	}
 
-	resp.Res = contact
-	resp.Code = http.StatusOK
-	resp.Meta = map[string]interface{}{
-		"replaced": 1,
+	if _, err := r.Table("contacts").Get(ID).Delete().RunWrite(c.Session); err != nil {
+		return resp, api2go.NewHTTPError(err, "Unable to delete resource", http.StatusInternalServerError)
 	}
+
+	resp.Code = http.StatusNoContent
 
 	return resp, nil
 }
