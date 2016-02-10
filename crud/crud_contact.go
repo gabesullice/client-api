@@ -3,6 +3,7 @@ package crud
 import (
 	// stdlib
 	"fmt"
+	//"log"
 	"net/http"
 
 	// internal
