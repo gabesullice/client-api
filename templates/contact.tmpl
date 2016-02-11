@@ -1,0 +1,3 @@
+*Name*: {{ .firstName }} {{ .lastName }}
+  *Phones*:{{ range $key, $phone := .Phones }} {{ $phone.Type }}: {{ $phone.Number }}{{ end }}
+  *Emails*:{{ range $key, $email := .Emails }} {{ $email }}{{ end }}

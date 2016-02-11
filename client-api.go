@@ -2,16 +2,17 @@ package main
 
 import (
 	// stdlib
-	//	"fmt"
+	"fmt"
 	"log"
 	"net/http"
 
 	// internal
 	"github.com/gabesullice/client-api/crud"
 	"github.com/gabesullice/client-api/models"
+	"github.com/gabesullice/client-api/slack"
 
 	// external
-	//"github.com/julienschmidt/httprouter"
+	"github.com/julienschmidt/httprouter"
 	"github.com/manyminds/api2go"
 	"github.com/manyminds/api2go/jsonapi"
 )
@@ -39,7 +40,16 @@ func main() {
 		api.AddResource(resource.Object, resource.CRUD)
 	}
 
-	handler := api.Handler()
+	handler, ok := api.Handler().(*httprouter.Router)
+	if !ok {
+		log.Fatalln("Unable to cast api2go router as *httprouter.Router")
+	}
+
+	handler.Handler(
+		"POST",
+		fmt.Sprintf("/%s/slack/contact", config["prefix"]),
+		slack.NewSlackHandler(),
+	)
 
 	log.Printf("Awaiting connections on %s...", ":3000")
 	http.ListenAndServe(":3000", handler)
