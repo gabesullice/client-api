@@ -27,27 +27,6 @@ func NewContactResource() ContactResource {
 	}
 }
 
-func (c ContactResource) FindAll(req api2go.Request) (api2go.Responder, error) {
-	var resp api2go.Response
-
-	var contacts []models.Contact
-	res, err := r.Table("contacts").Run(c.Session)
-	if err != nil {
-		return resp, api2go.NewHTTPError(err, "Could not find contacts", http.StatusInternalServerError)
-	}
-	defer res.Close()
-
-	if err := res.All(&contacts); err != nil {
-		return resp, api2go.NewHTTPError(err, "Could not read contacts", http.StatusInternalServerError)
-	}
-
-	resp.Res = contacts
-	resp.Code = http.StatusOK
-	resp.Meta = map[string]interface{}{}
-
-	return resp, nil
-}
-
 func (c ContactResource) FindOne(ID string, req api2go.Request) (api2go.Responder, error) {
 	var contact models.Contact
 	if err := c.Storage.Get(ID, contact.GetName(), &contact); err != nil {
@@ -62,6 +41,24 @@ func (c ContactResource) FindOne(ID string, req api2go.Request) (api2go.Responde
 
 	return api2go.Response{
 		Res:  contact,
+		Code: http.StatusOK,
+	}, nil
+}
+
+func (c ContactResource) FindAll(req api2go.Request) (api2go.Responder, error) {
+	var contacts []models.Contact
+	if err := c.Storage.GetAll("contacts", &contacts); err != nil {
+		return api2go.Response{}, api2go.NewHTTPError(err, "Unable to retrieve contacts", http.StatusInternalServerError)
+	}
+
+	if len(contacts) < 1 {
+		return api2go.Response{
+			Code: http.StatusNotFound,
+		}, nil
+	}
+
+	return api2go.Response{
+		Res:  contacts,
 		Code: http.StatusOK,
 	}, nil
 }

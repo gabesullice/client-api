@@ -30,3 +30,21 @@ func (c Connection) Get(ID string, name string, obj interface{}) error {
 
 	return nil
 }
+
+func (c Connection) GetAll(name string, objects interface{}) error {
+	res, err := r.Table(name).Run(c.Session)
+	if err != nil {
+		return err
+	}
+	defer res.Close()
+
+	if res.IsNil() {
+		return nil
+	}
+
+	if err := res.All(objects); err != nil {
+		return err
+	}
+
+	return nil
+}
