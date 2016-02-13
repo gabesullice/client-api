@@ -8,6 +8,7 @@ import (
 
 	// internal
 	"github.com/gabesullice/client-api/models"
+	"github.com/gabesullice/client-api/storage"
 
 	// external
 	r "github.com/dancannon/gorethink"
@@ -16,10 +17,14 @@ import (
 
 type ContactResource struct {
 	Session *r.Session
+	Storage storage.Connection
 }
 
 func NewContactResource() ContactResource {
-	return ContactResource{Session: session}
+	return ContactResource{
+		Session: session,
+		Storage: storage.Connection{Session: session},
+	}
 }
 
 func (c ContactResource) FindAll(req api2go.Request) (api2go.Responder, error) {
@@ -44,28 +49,21 @@ func (c ContactResource) FindAll(req api2go.Request) (api2go.Responder, error) {
 }
 
 func (c ContactResource) FindOne(ID string, req api2go.Request) (api2go.Responder, error) {
-	var resp api2go.Response
-
-	res, err := r.Table("contacts").Get(ID).Run(c.Session)
-	if err != nil {
-		return resp, api2go.NewHTTPError(err, "Could not find contact", http.StatusInternalServerError)
-	}
-	defer res.Close()
-
-	if res.IsNil() {
-		return resp, api2go.NewHTTPError(fmt.Errorf("Requested resource, %s, does not exist.", ID), "Resource not found.", http.StatusNotFound)
-	}
-
 	var contact models.Contact
-	if err := res.One(&contact); err != nil {
-		return resp, api2go.NewHTTPError(err, "Could not read contact", http.StatusInternalServerError)
+	if err := c.Storage.Get(ID, contact.GetName(), &contact); err != nil {
+		return api2go.Response{}, api2go.NewHTTPError(err, "Unable to retrieve contact", http.StatusInternalServerError)
 	}
 
-	resp.Res = contact
-	resp.Code = http.StatusOK
-	resp.Meta = map[string]interface{}{}
+	if contact.ID == "" {
+		return api2go.Response{
+			Code: http.StatusNotFound,
+		}, nil
+	}
 
-	return resp, nil
+	return api2go.Response{
+		Res:  contact,
+		Code: http.StatusOK,
+	}, nil
 }
 
 func (c ContactResource) Create(obj interface{}, req api2go.Request) (api2go.Responder, error) {
