@@ -134,3 +134,23 @@ func (c ContactResource) Delete(ID string, req api2go.Request) (api2go.Responder
 
 	return resp, nil
 }
+
+func (c ContactResource) Search(search string) ([]models.Contact, error) {
+	res, err := r.Table("contacts").Filter(func(user r.Term) r.Term {
+		return user.Field("firstName").
+			Match(fmt.Sprintf("(?i)%s", search))
+	}).Run(c.Session)
+
+	if err != nil {
+		log.Printf("RethinkDB query failed. Error: %s", err.Error())
+		return []models.Contact{}, err
+	}
+
+	var contacts []models.Contact
+	if err := res.All(&contacts); err != nil {
+		log.Printf("Unable to read contacts from result. Error: %s", err.Error())
+		return []models.Contact{}, err
+	}
+
+	return contacts, nil
+}
