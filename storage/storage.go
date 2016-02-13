@@ -48,3 +48,14 @@ func (c Connection) GetAll(name string, objects interface{}) error {
 
 	return nil
 }
+
+func (c Connection) Insert(name string, obj interface{}) (key string, err error) {
+	res, err := r.Table(name).Insert(obj).RunWrite(c.Session)
+	if err != nil {
+		return "", err
+	}
+
+	key = res.GeneratedKeys[0]
+
+	return key, nil
+}

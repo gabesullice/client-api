@@ -64,25 +64,22 @@ func (c ContactResource) FindAll(req api2go.Request) (api2go.Responder, error) {
 }
 
 func (c ContactResource) Create(obj interface{}, req api2go.Request) (api2go.Responder, error) {
-	var resp api2go.Response
-
 	contact, ok := obj.(models.Contact)
 	if !ok {
-		return resp, api2go.NewHTTPError(fmt.Errorf("Invalid instance given."), "Invalid instance given", http.StatusBadRequest)
+		return api2go.Response{}, api2go.NewHTTPError(fmt.Errorf("Invalid instance given."), "Invalid instance given", http.StatusBadRequest)
 	}
 
-	res, err := r.Table("contacts").Insert(contact).RunWrite(c.Session)
+	key, err := c.Storage.Insert(contact.GetName(), contact)
 	if err != nil {
-		return resp, api2go.NewHTTPError(err, "Unable to save new resource", http.StatusInternalServerError)
+		return api2go.Response{}, api2go.NewHTTPError(err, "Unable to save new resource", http.StatusInternalServerError)
 	}
 
-	contact.ID = res.GeneratedKeys[0]
+	contact.ID = key
 
-	resp.Res = contact
-	resp.Code = http.StatusCreated
-	resp.Meta = map[string]interface{}{}
-
-	return resp, nil
+	return api2go.Response{
+		Res:  contact,
+		Code: http.StatusCreated,
+	}, nil
 }
 
 func (c ContactResource) Update(obj interface{}, req api2go.Request) (api2go.Responder, error) {

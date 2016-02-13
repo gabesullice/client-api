@@ -4,6 +4,7 @@ import (
 	// stdlib
 	"errors"
 	"fmt"
+	//"log"
 
 	// external
 	"github.com/manyminds/api2go/jsonapi"
@@ -43,19 +44,18 @@ func (c Contact) GetID() string {
 
 func (c Contact) GetReferences() []jsonapi.Reference {
 	return []jsonapi.Reference{
-		jsonapi.Reference{
-			Type:        c.GetName(),
-			Name:        "related",
-			IsNotLoaded: true,
+		{
+			Type: c.GetName(),
+			Name: "related",
 		},
 	}
 }
 
 func (c Contact) GetReferencedIDs() []jsonapi.ReferenceID {
 	var refs []jsonapi.ReferenceID
-	for _, id := range c.Related {
+	for k := range c.Related {
 		refs = append(refs, jsonapi.ReferenceID{
-			ID:   id,
+			ID:   c.Related[k],
 			Type: c.GetName(),
 			Name: "related",
 		})
