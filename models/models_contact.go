@@ -1,5 +1,14 @@
 package models
 
+import (
+	// stdlib
+	"errors"
+	"fmt"
+
+	// external
+	"github.com/manyminds/api2go/jsonapi"
+)
+
 type Phone struct {
 	Type      string `gorethink:"type" json:"type"`
 	Number    string `gorethink:"number" json:"number"`
@@ -31,3 +40,58 @@ func (c *Contact) SetID(ID string) error {
 func (c Contact) GetID() string {
 	return c.ID
 }
+
+func (c Contact) GetReferences() []jsonapi.Reference {
+	return []jsonapi.Reference{
+		jsonapi.Reference{
+			Type:        c.GetName(),
+			Name:        "related",
+			IsNotLoaded: true,
+		},
+	}
+}
+
+func (c Contact) GetReferencedIDs() []jsonapi.ReferenceID {
+	var refs []jsonapi.ReferenceID
+	for _, id := range c.Related {
+		refs = append(refs, jsonapi.ReferenceID{
+			ID:   id,
+			Type: c.GetName(),
+			Name: "related",
+		})
+	}
+	return refs
+}
+
+func (c *Contact) SetToManyReferenceIDs(name string, IDs []string) error {
+	if name == "related" {
+		c.Related = IDs
+		return nil
+	}
+
+	return errors.New(fmt.Sprintf("There is no %s relationship on %s", name, c.GetName()))
+}
+
+//func (c *Contact) AddToManyIDs(name string, IDs []string) error {
+//	if name == "related" {
+//		c.Related = append(c.Related, IDs...)
+//		return nil
+//	}
+//
+//	return errors.New(fmt.Sprintf("There is no %s relationship on %s", name, c.GetName()))
+//}
+//
+//func (c *Contact) DeleteToManyIDs(name string, IDs []string) error {
+//	if name == "related" {
+//		for _, ID := range IDs {
+//			for pos, oldID := range c.Related {
+//				if ID == oldID {
+//					// match, this ID must be removed
+//					c.Related = append(c.Related[:pos], c.Related[pos+1:]...)
+//				}
+//			}
+//		}
+//	}
+//
+//	return errors.New(fmt.Sprintf("There is no %s relationship on %s", name, c.GetName()))
+//}
