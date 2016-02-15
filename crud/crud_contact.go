@@ -90,7 +90,7 @@ func (c ContactResource) Update(obj interface{}, req api2go.Request) (api2go.Res
 		return resp, api2go.NewHTTPError(fmt.Errorf("Invalid instance given."), "Invalid instance given", http.StatusBadRequest)
 	}
 
-	res, err := r.Table("contacts").Update(contact).RunWrite(c.Session)
+	res, err := r.Table("contacts").Get(contact.ID).Update(contact).RunWrite(c.Session)
 	if err != nil {
 		return resp, api2go.NewHTTPError(err, "Unable to update resource", http.StatusInternalServerError)
 	}
@@ -129,8 +129,9 @@ func (c ContactResource) Delete(ID string, req api2go.Request) (api2go.Responder
 
 func (c ContactResource) Search(search string) ([]models.Contact, error) {
 	res, err := r.Table("contacts").Filter(func(user r.Term) r.Term {
-		return user.Field("firstName").
-			Match(fmt.Sprintf("(?i)%s", search))
+		return user.Field("name").Match(fmt.Sprintf("(?i)%s", search)).
+			Or(user.Field("firstName").Match(fmt.Sprintf("(?i)%s", search))).
+			Or(user.Field("lastName").Match(fmt.Sprintf("(?i)%s", search)))
 	}).Run(c.Session)
 
 	if err != nil {
