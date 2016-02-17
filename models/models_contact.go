@@ -10,6 +10,14 @@ import (
 	"github.com/manyminds/api2go/jsonapi"
 )
 
+type Address struct {
+	StreetNumber string `gorethink:"streetNumber" json:"streetNumber"`
+	City         string `gorethink:"city" json:"city"`
+	State        string `gorethink:"state" json:"state"`
+	Country      string `gorethink:"country" json:"country"`
+	PostalCode   string `gorethink:"postalCode" json:"postalCode"`
+}
+
 type Phone struct {
 	Type      string `gorethink:"type" json:"type"`
 	Number    string `gorethink:"number" json:"number"`
@@ -17,16 +25,17 @@ type Phone struct {
 }
 
 type Contact struct {
-	ID        string   `gorethink:"id,omitempty" json:"-"`
-	Name      string   `gorethink:"name" json:"name"`
-	FirstName string   `gorethink:"firstName" json:"firstName"`
-	LastName  string   `gorethink:"lastName" json:"lastName"`
-	Synonyms  []string `gorethink:"synonyms" json:"synonyms"`
-	Position  string   `gorethink:"position" json:"position"`
-	Phones    []Phone  `gorethink:"phones" json:"phones"`
-	Emails    []string `gorethink:"emails" json:"emails"`
-	Notes     string   `gorethink:"notes" json:"notes"`
-	Related   []string `gorethink:"related" json:"related"`
+	ID        string    `gorethink:"id,omitempty" json:"-"`
+	Name      string    `gorethink:"name" json:"name"`
+	FirstName string    `gorethink:"firstName" json:"firstName"`
+	LastName  string    `gorethink:"lastName" json:"lastName"`
+	Aliases   []string  `gorethink:"aliases" json:"aliases"`
+	Position  string    `gorethink:"position" json:"position"`
+	Phones    []Phone   `gorethink:"phones" json:"phones"`
+	Addresses []Address `gorethink:"addresses" json:"addresses"`
+	Emails    []string  `gorethink:"emails" json:"emails"`
+	Notes     string    `gorethink:"notes" json:"notes"`
+	Related   []string  `gorethink:"related" json:"related"`
 }
 
 func (c Contact) GetName() string {
