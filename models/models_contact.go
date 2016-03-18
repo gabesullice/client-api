@@ -25,11 +25,12 @@ type Phone struct {
 }
 
 type Contact struct {
-	ID        string    `gorethink:"id,omitempty" json:"-"`
-	Name      string    `gorethink:"name" json:"name"`
-	FirstName string    `gorethink:"firstName" json:"firstName"`
-	LastName  string    `gorethink:"lastName" json:"lastName"`
-	Aliases   []string  `gorethink:"aliases" json:"aliases"`
+	ID        string `gorethink:"id,omitempty" json:"-"`
+	Name      string `gorethink:"name" json:"name"`
+	FirstName string `gorethink:"firstName" json:"firstName"`
+	LastName  string `gorethink:"lastName" json:"lastName"`
+	Aliases   string `gorethink:"aliases" json:"aliases"`
+	//Aliases   []string  `gorethink:"aliases" json:"aliases"`
 	Position  string    `gorethink:"position" json:"position"`
 	Phones    []Phone   `gorethink:"phones" json:"phones"`
 	Addresses []Address `gorethink:"addresses" json:"addresses"`

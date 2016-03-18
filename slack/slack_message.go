@@ -27,26 +27,67 @@ type SlackAttachmentField struct {
 
 func newSlackMessage(contacts []models.Contact) SlackMessage {
 	var attachments []SlackAttachment
+
 	for _, contact := range contacts {
-		attachments = append(attachments, SlackAttachment{
-			Text: contact.FirstName,
-			Fields: []SlackAttachmentField{
-				SlackAttachmentField{
-					Title: "Emails",
-					Value: strings.Join(contact.Emails, ", "),
-					Short: true,
-				},
-				SlackAttachmentField{
-					Title: "Phones",
-					Value: fmt.Sprintf("%s: %s", contact.Phones[0].Type, contact.Phones[0].Number),
-					Short: true,
-				},
-			},
-		})
+		text := "Unknown"
+
+		if len(contact.FirstName)+len(contact.LastName) > 0 {
+			text = strings.Join([]string{contact.FirstName, contact.LastName}, " ")
+		} else if len(contact.Name) > 0 {
+			text = contact.Name
+		}
+
+		attachment := SlackAttachment{Text: text}
+
+		addEmailAttachments(&attachment, contact)
+		addPhoneAttachments(&attachment, contact)
+		addNotesAttachment(&attachment, contact)
+
+		attachments = append(attachments, attachment)
 	}
 
 	return SlackMessage{
 		Text:        fmt.Sprintf("Found %d contact(s)", len(contacts)),
 		Attachments: attachments,
+	}
+}
+
+func addPhoneAttachments(attachment *SlackAttachment, contact models.Contact) {
+	var numbers []string
+	for _, phone := range contact.Phones {
+		if len(phone.Number) > 0 {
+			numbers = append(numbers, fmt.Sprintf("%s: %s", phone.Type, phone.Number))
+		}
+	}
+
+	attachment.Fields = append(attachment.Fields, SlackAttachmentField{
+		Title: "Phones",
+		Value: strings.Join(numbers, "\r"),
+		Short: true,
+	})
+}
+
+func addEmailAttachments(attachment *SlackAttachment, contact models.Contact) {
+	var emails []string
+	for _, email := range contact.Emails {
+		if len(email) > 0 {
+			emails = append(emails, email)
+		}
+	}
+
+	attachment.Fields = append(attachment.Fields, SlackAttachmentField{
+		Title: "Emails",
+		Value: strings.Join(emails, "\r"),
+		Short: true,
+	})
+}
+
+func addNotesAttachment(attachment *SlackAttachment, contact models.Contact) {
+	if len(contact.Notes) > 0 {
+		attachment.Fields = append(attachment.Fields, SlackAttachmentField{
+			Title: "Notes",
+			Value: contact.Notes,
+			Short: false,
+		})
 	}
 }

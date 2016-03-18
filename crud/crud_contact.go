@@ -131,7 +131,8 @@ func (c ContactResource) Search(search string) ([]models.Contact, error) {
 	res, err := r.Table("contacts").Filter(func(user r.Term) r.Term {
 		return user.Field("name").Match(fmt.Sprintf("(?i)%s", search)).
 			Or(user.Field("firstName").Match(fmt.Sprintf("(?i)%s", search))).
-			Or(user.Field("lastName").Match(fmt.Sprintf("(?i)%s", search)))
+			Or(user.Field("lastName").Match(fmt.Sprintf("(?i)%s", search))).
+			Or(user.Field("aliases").Match(fmt.Sprintf("(?i)%s", search)))
 	}).Run(c.Session)
 
 	if err != nil {
