@@ -60,11 +60,13 @@ func addPhoneAttachments(attachment *SlackAttachment, contact models.Contact) {
 		}
 	}
 
-	attachment.Fields = append(attachment.Fields, SlackAttachmentField{
-		Title: "Phones",
-		Value: strings.Join(numbers, "\r"),
-		Short: true,
-	})
+	if len(numbers) > 0 {
+		attachment.Fields = append(attachment.Fields, SlackAttachmentField{
+			Title: "Phones",
+			Value: strings.Join(numbers, "\r"),
+			Short: true,
+		})
+	}
 }
 
 func addEmailAttachments(attachment *SlackAttachment, contact models.Contact) {
@@ -75,11 +77,13 @@ func addEmailAttachments(attachment *SlackAttachment, contact models.Contact) {
 		}
 	}
 
-	attachment.Fields = append(attachment.Fields, SlackAttachmentField{
-		Title: "Emails",
-		Value: strings.Join(emails, "\r"),
-		Short: true,
-	})
+	if len(emails) > 0 {
+		attachment.Fields = append(attachment.Fields, SlackAttachmentField{
+			Title: "Emails",
+			Value: strings.Join(emails, "\r"),
+			Short: true,
+		})
+	}
 }
 
 func addNotesAttachment(attachment *SlackAttachment, contact models.Contact) {
@@ -87,7 +91,7 @@ func addNotesAttachment(attachment *SlackAttachment, contact models.Contact) {
 		attachment.Fields = append(attachment.Fields, SlackAttachmentField{
 			Title: "Notes",
 			Value: contact.Notes,
-			Short: false,
+			Short: true,
 		})
 	}
 }
