@@ -14,7 +14,7 @@ var (
 
 func init() {
 	sess, err := r.Connect(r.ConnectOpts{
-		Address:  "localhost:28015",
+		Address:  "rethinkdb:28015",
 		Database: "client_api",
 		MaxIdle:  10,
 		MaxOpen:  10,
