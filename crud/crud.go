@@ -3,6 +3,7 @@ package crud
 import (
 	// stdlib
 	"log"
+	"os"
 
 	// external
 	r "github.com/dancannon/gorethink"
@@ -13,8 +14,10 @@ var (
 )
 
 func init() {
+	rethink_host := os.Getenv("RETHINKDB_HOST")
+
 	sess, err := r.Connect(r.ConnectOpts{
-		Address:  "rethinkdb:28015",
+		Address:  rethink_host + ":28015",
 		Database: "client_api",
 		MaxIdle:  10,
 		MaxOpen:  10,
